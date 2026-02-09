@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seismic Album - Interactive Visualization</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/upload-overlay.css">
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <!-- Welcome Message Modal -->
+    <div class="welcome-modal" id="welcomeModal">
+        <div class="welcome-content">
+            <img src="images/logo.png" alt="Seismic Logo" class="welcome-logo">
+            <h2 class="welcome-title">Welcome to Seismic Album</h2>
+            <p class="welcome-message" id="welcomeMessage"></p>
+            <button class="welcome-btn" onclick="closeWelcomeModal()">Let's Begin ✨</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-content">
+            <img src="images/logo.png" alt="Seismic Logo" class="logo">
+            <div class="header-text">
+                <h1>Seismic Album</h1>
+                <p class="subtitle">Interactive Memory Visualization</p>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('upload')">Add Memory</button>
+        <button class="tab-btn" onclick="switchTab('gallery')">Photo Gallery</button>
+    </nav>
+
+    <!-- Admin Floating Button -->
+    <button class="admin-float-btn" onclick="switchTab('admin')" title="Admin Panel">
+        🔐
+    </button>
+
+    <!-- Upload Section -->
+    <section id="upload" class="content-section active">
+        
+        <div class="layout-row">   <!-- NEW WRAPPER -->
+            
+            <!-- LEFT: Form -->
+            <div class="form-container compact">
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" required placeholder="Enter name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quote">Memorable Quote</label>
+                            <textarea id="quote" required placeholder="Enter a memorable quote" spellcheck="false" autocorrect="off" autocomplete="off" data-gramm="false" data-enable-grammarly="false"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="photo">Photo Upload</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="photo" accept="image/*" required>
+                            <label class="file-input-label" for="photo">
+                                📸 Click to select photo
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Add to Album</button>
+                </form>
+            </div>
+            
+            <!-- RIGHT: Live Network Visualization -->
+            <div class="live-network-container">
+                <div class="live-network-header">
+                    <h3 class="live-network-title">Live Network</h3>
+                    <p class="live-network-subtitle">Watch your memories connect in real-time</p>
+                </div>
+                <span class="live-network-hint">💡 Drag nodes • Scroll to zoom</span>
+                <div id="liveGraph"></div>
+            </div>
+            
+        </div>  <!-- END WRAPPER -->
+        
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="content-section">
+        <div class="gallery-grid" id="galleryGrid">
+                <!-- ADD Memory Card -->
+                <div class="add-memory-card" onclick="switchTab('upload'); document.getElementById('name').focus();">
+                    <div class="add-memory-icon">+</div>
+                    <div class="add-memory-text">Add Memory</div>
+                </div>
+            <!-- Gallery items will be inserted here -->
+        </div>
+    </section>
+
+    <!-- Admin Panel -->
+    <section id="admin" class="content-section">
+        <div class="admin-panel">
+            <div class="password-form" id="passwordForm">
+                <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Admin Access</h2>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter admin password">
+                </div>
+                <button class="submit-btn" onclick="checkAdminPassword()">Unlock</button>
+            </div>
+
+            <div class="admin-actions" id="adminActions">
+                <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Manage Memories</h2>
+                <div class="memory-list" id="memoryList">
+                    <!-- Memory items will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-name"></div>
+        <div class="tooltip-quote"></div>
+    </div>
+
+    <!-- Success Notification -->
+    <div class="success-notification" id="successNotification">
+        <span class="notification-icon">✓</span>
+        <span class="notification-text"></span>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2 class="modal-header">Edit Memory</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editName">Name</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editQuote">Quote</label>
+                    <textarea id="editQuote" required spellcheck="false" autocorrect="off" autocomplete="off" data-gramm="false" data-enable-grammarly="false"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editPhoto">Change Photo (Optional)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="editPhoto" accept="image/*">
+                        <label class="file-input-label" for="editPhoto">
+                            📸 Click to change photo
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="modal-btn primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+    <div class="upload-overlay" id="uploadOverlay" aria-hidden="true">
+        <div class="upload-inner">
+            <div class="spinner"></div>
+            <div class="upload-text">Uploading…</div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
